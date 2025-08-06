@@ -2,8 +2,12 @@ name: Build & Push Docker Image to ECR
 
 on:
   push:
-    branches: [ Issue-2-Create-CI ]  # <--- Burayı kendi branch adına göre değiştir
-
+    branches:
+      - main
+      - '**'        
+  pull_request:
+    branches:
+      - main        
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
