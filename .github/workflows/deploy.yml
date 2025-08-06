@@ -1,0 +1,37 @@
+name: Build & Push Docker Image to ECR
+
+on:
+  push:
+    branches: [ Issue-2-Create-CI ]  # <--- Burayı kendi branch adına göre değiştir
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tag
+        id: vars
+        run: echo "IMAGE_TAG=${{ steps.login-ecr.outputs.registry }}/react-weather-cdk:latest" >> $GITHUB_ENV
+
+      - name: Create builder for multi-arch
+        run: docker buildx create --use
+
+      - name: Build & Push Docker image (amd64)
+        run: |
+          docker buildx build --platform linux/amd64 \
+            -t $IMAGE_TAG \
+            --push .
